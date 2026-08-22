@@ -1935,6 +1935,13 @@ aside.VPSidebar {
   max-height: none;
 }
 
+/* 论文架构图包含多个细小标签，需要比普通插图更大的阅读尺寸。 */
+.vp-doc p > img[src$="lecun-2022-autonomous-intelligence-architecture.png"] {
+  width: min(100%, 660px);
+  max-width: 100%;
+  max-height: none;
+}
+
 .vp-doc .image-caption {
   color: #86868b;
   font-size: 0.875em;

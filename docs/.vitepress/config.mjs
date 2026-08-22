@@ -217,23 +217,23 @@ export default defineConfig({
         ],
       },
       {
-        text: "5. JEPA：特征空间预测",
+        text: "5. JEPA：学习可预测的世界状态",
         collapsed: false,
         items: [
           {
-            text: "5.1. 预测特征而非像素",
+            text: "5.1. 为什么是 JEPA",
             link: "/chapters/05-jepa/01-feature-prediction",
           },
           {
-            text: "5.2. 掩码、EMA 与表示坍缩",
+            text: "5.2. JEPA 怎样学习",
             link: "/chapters/05-jepa/02-mask-ema-collapse",
           },
           {
-            text: "5.3. 视频 JEPA",
+            text: "5.3. 从图像到视频",
             link: "/chapters/05-jepa/03-video-jepa",
           },
           {
-            text: "5.4. 动作条件 JEPA",
+            text: "5.4. 从观看到行动",
             link: "/chapters/05-jepa/04-action-jepa",
           },
           {
