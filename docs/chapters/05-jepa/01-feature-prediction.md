@@ -121,50 +121,46 @@ $$
 
 $c$ 表示模型已经知道的条件，例如 target 的位置、预测的时间间隔或计划执行的动作；$z$ 是可选的潜变量，用来表示 target 中存在、却无法由 context 确定的信息。这里把二者分开书写，是为了避免把“已知条件”和“未知因素”混为一谈。LeCun 在 2022 年给出的通用 JEPA 使用的是更简洁的写法 $P(s_x,z)$。
 
-### 预测关系塑造表示保留什么
+### 从 context 到 target：JEPA 如何完成一次预测
 
-表示不会凭空知道什么重要。JEPA 被要求从 context 预测 target，这个任务会向表示施加一种**选择压力**。
+上面的两行公式，可以拆成一次训练中的四个步骤。
 
-::: info 先看一条因果链
-**target 中的变化 → 是否改变 $s_y$ → 是否进入预测误差 → Predictor 是否必须学习**
+1. **构造预测关系。** 从数据中取出 context $x$ 和 target $y$。它们可以是同一幅图像的不同区域、同一段视频的不同片段，也可以是当前状态与未来状态。若 target 的位置、时间间隔或计划执行的动作已经给定，就把它们作为条件 $c$。
+2. **分别编码两端。** Context Encoder 将已知信息编码为 $s_x$；Target Encoder 将真实 target 编码为 $s_y$。$s_y$ 是训练时的参照，Predictor 并不会直接看到原始的 $y$。
+3. **预测 target 表示。** Predictor 根据 $s_x$、已知条件 $c$ 和可选的潜变量 $z$，产生预测 $\hat{s}_y$。它输出的是 target 的表示，而不是 target 本身。
+4. **在表示空间中比较。** 距离 $D(\hat{s}_y,s_y)$ 衡量预测与参照是否一致，并成为训练信号。至于两个编码器具体怎样更新、怎样避免得到无信息的表示，将在 5.2 中展开。
+
+这里最关键的区别是：**预测误差比较的是 $\hat{s}_y$ 与 $s_y$，不是 $\hat{y}$ 与 $y$。** 因此，原始 target 中的一项差异是否需要被预测，取决于它是否改变了 $s_y$。
+
+<div class="jepa-outcome-grid">
+  <section class="jepa-outcome-card is-predictable">
+    <span class="jepa-outcome-label">能够确定</span>
+    <strong>保留并预测</strong>
+    <p>如果一种变化被保留在 <code>s_y</code> 中，并且能够由 <code>s_x</code> 和已知条件 <code>c</code> 推出，Predictor 就需要学会这种关系。</p>
+  </section>
+  <section class="jepa-outcome-card is-ignored">
+    <span class="jepa-outcome-label">不必区分</span>
+    <strong>在表示中合并</strong>
+    <p>如果不同的 target 被编码为相同或相近的 <code>s_y</code>，它们之间的差异便不会进入预测误差，也不需要被恢复。</p>
+  </section>
+  <section class="jepa-outcome-card is-uncertain">
+    <span class="jepa-outcome-label">重要但未知</span>
+    <strong>保留多种可能</strong>
+    <p>如果一种差异需要保留，却无法由 context 确定，通用 JEPA 可以用不同的 <code>z</code> 表达多个可能的 target 表示。</p>
+  </section>
+</div>
+
+仍以车辆驶近岔路口为例：车辆的位置和速度可以由已有信息推断，属于第一种情况；路面纹理或树叶的具体摆动可以不进入目标表示，属于第二种情况；另一辆车最终左转还是右转无法事先确定，却可能直接影响行动，属于第三种情况。如果转向已经由智能体选定，它就是条件 $c$；如果它仍是未知因素，才需要由 $z$ 表达。
+
+[LeCun 2022 年的通用 JEPA](https://openreview.net/forum?id=BZ5a1r-kVsf) 正是通过两种机制处理“一份 context 对应多个 target”的情况：不需要区分的 target 可以通过编码器的不变性得到相同表示；仍需区分的可能结果，则可以通过改变 $z$ 得到不同的预测表示。这是一种通用设计，[I-JEPA](https://arxiv.org/abs/2301.08243) 和 [V-JEPA](https://arxiv.org/abs/2404.08471) 等具体实现并没有完整采用其中显式搜索多个结果的潜变量机制。
+
+训练时，Target Encoder 用真实的 $y$ 提供参照表示 $s_y$。训练完成后保留哪些模块，则取决于用途：表征学习通常使用编码器；预测未来状态还需要 Context Encoder 与 Predictor。无论哪种用途，JEPA 的 Predictor 都不会因此自动变成图像或视频生成器。
+
+::: warning 不可预测，不等于不重要
+JEPA 提供了忽略差异和表达不确定性的机制，却不会自动知道二者的正确边界。预测任务、数据和训练约束都会影响表示最终保留什么；如果所有输入都被编码成同一个常量，预测误差甚至也可以很小。怎样让表示既有信息又可预测，就是 5.2 要处理的**表示坍缩**问题。
 :::
 
-| target encoder 如何处理差异                                                            | Predictor 面临的要求        |
-| -------------------------------------------------------------------------------------- | --------------------------- |
-| <strong>若压缩差异：</strong>树叶位置、路面纹理或光照发生变化，但被编码为相近的 $s_y$  | 则不必恢复这些细节          |
-| <strong>若保留差异：</strong>车辆位置或运动方向发生变化，并且这种差异被保留在 $s_y$ 中 | 则必须根据 context 学会预测 |
-
-这张表揭示了两个编码器的分工：target encoder 的表示规定了预测误差能够“看见”哪些差异；context encoder 则要保留从 context 中能够获得、且预测 target 所需的信息。Predictor 再结合已知条件 $c$ 和可选的 $z$ 学习两者之间的映射，表示也由此在预测关系中逐渐形成。
-
-> **JEPA 不是先由人写下“什么重要”，再让模型照着提取；它通过设计预测关系，让表示在训练中受到选择。**
-
-这也是为什么 [I-JEPA](https://ai.meta.com/blog/yann-lecun-ai-model-i-jepa/) 和 [V-JEPA](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/) 要仔细设计 context 与 target：预测题怎样出，会影响模型必须保留什么。
-
-::: warning 可预测，不等于有信息
-如果所有输入都被编码成同一个常量，预测损失也可以很小，但表示什么都没有保留。表示空间预测只提供了学习抽象状态的可能；怎样让表示既有信息又可预测，就是下一节要处理的**表示坍缩**问题。
-:::
-
-### 一个 context，可以有多个合理的 target
-
-现实世界并不确定。同一辆车驶近岔路口，接下来可能左转，也可能右转。若只让一个确定性的 Predictor 输出一个结果，它很容易给出两种未来的折中，却不代表任何真实情况。
-
-[LeCun 2022 年的通用 JEPA](https://openreview.net/forum?id=BZ5a1r-kVsf) 为这类一对多关系留下了两种处理方式：
-
-1. **用表示的不变性省去无关差异。** 树叶怎样摆动、路面纹理如何变化，可以不进入目标表示。
-2. **用潜变量 $z$ 保留重要的不确定性。** 在岔路口的例子中，不同的 $z$ 可以对应左转和右转两种未来表示。
-
-这也说明了条件 $c$ 与潜变量 $z$ 的区别：如果智能体已经决定“向左转”，这个动作属于已知条件 $c$；如果另一辆车会向哪边转尚不可知，这个选择才属于 $z$ 要表达的不确定因素。
-
-::: tip 不要把 JEPA 与某一种任务画等号
-
-- [I-JEPA](https://arxiv.org/abs/2301.08243) 用图像的可见区域预测被遮挡区域的表示。
-- [V-JEPA](https://arxiv.org/abs/2404.08471) 用视频的可见时空区域预测被遮挡区域的表示。
-- masking 只是构造 context 与 target 的一种方法；target 也可以来自未来、另一种视角或另一种模态。
-
-因此，JEPA 既不等于“遮挡预测”，也不等于“未来预测”。上述 I-JEPA 与 V-JEPA 也没有实现原始蓝图中显式搜索多个不确定未来的潜变量机制。
-:::
-
-JEPA 的核心不是单纯把数据压缩得更小，而是让内部状态按照**可预测的关系**组织起来：从已知信息能够推出什么，哪些差异可以忽略，哪些不确定性必须保留。
+至此，JEPA 的计算过程可以概括为：**构造 context 与 target，分别编码，在表示空间中完成预测，再用目标表示提供训练信号。** 下一节将继续讨论，这套计算最终希望形成怎样的内部状态。
 
 ## 5.1.3　JEPA 想学到什么：可预测的状态与变化规律
 

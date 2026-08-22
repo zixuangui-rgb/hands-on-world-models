@@ -1957,6 +1957,63 @@ aside.VPSidebar {
   display: none;
 }
 
+/* JEPA 预测流程中的三类 target 差异。 */
+.vp-doc .jepa-outcome-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.vp-doc .jepa-outcome-card {
+  min-width: 0;
+  margin: 0;
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-top: 3px solid var(--jepa-outcome-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+}
+
+.vp-doc .jepa-outcome-card.is-predictable {
+  --jepa-outcome-color: #2f7d74;
+}
+
+.vp-doc .jepa-outcome-card.is-ignored {
+  --jepa-outcome-color: #7c8798;
+}
+
+.vp-doc .jepa-outcome-card.is-uncertain {
+  --jepa-outcome-color: #c0762b;
+}
+
+.vp-doc .jepa-outcome-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--jepa-outcome-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.vp-doc .jepa-outcome-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--vp-c-text-1);
+  font-size: 1rem;
+}
+
+.vp-doc .jepa-outcome-card p {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.dark .vp-doc .jepa-outcome-card {
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
 .vp-doc .image-caption {
   color: #86868b;
   font-size: 0.875em;
@@ -2445,6 +2502,10 @@ html {
    20. Mobile Optimizations
    =================================================== */
 @media (max-width: 768px) {
+  .vp-doc .jepa-outcome-grid {
+    grid-template-columns: 1fr;
+  }
+
   .vp-doc p:has(> img[src$="jepa-architecture-comparison.png"]) {
     display: none;
   }
