@@ -1,14 +1,15 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
   width="520"
-  height="520"
-  viewBox="0 0 520 520"
+  height="460"
+  viewBox="0 0 520 460"
   role="img"
   aria-labelledby="title description"
 >
-  <title id="title">分层状态与多时间尺度预测</title>
+  <title id="title">H-JEPA 的多层预测关系</title>
   <desc id="description">
-    高层状态保留较少细节，用于较长时间尺度的预测；低层状态保留较多细节，用于短期逐步预测。高层预测可以为低层提供子目标。
+    JEPA-1 在低层表示中保留较多细节，用于较短时间尺度的预测；JEPA-2
+    继续抽象低层表示，用于更长时间尺度的预测。
   </desc>
   <defs>
     <marker
@@ -83,14 +84,14 @@
     x="6"
     y="6"
     width="508"
-    height="508"
+    height="448"
     rx="28"
     fill="#FFFFFF"
     stroke="#D9DEE3"
     stroke-width="1.5"
   />
   <text x="260" y="42" text-anchor="middle" font-size="22" font-weight="750">
-    同一个世界，不同预测尺度
+    H-JEPA：不同层级预测不同时间尺度
   </text>
 
   <g filter="url(#shadow)">
@@ -98,7 +99,7 @@
       x="28"
       y="68"
       width="464"
-      height="158"
+      height="150"
       rx="22"
       fill="#EAF5FB"
       stroke="#0072B2"
@@ -106,8 +107,8 @@
     />
   </g>
   <circle cx="58" cy="98" r="13" fill="#0072B2" />
-  <text x="82" y="105" class="section-title">高层状态 · 更抽象</text>
-  <text x="462" y="104" class="note" text-anchor="end">较少细节</text>
+  <text x="82" y="105" class="section-title">JEPA-2 · 高层状态</text>
+  <text x="462" y="104" class="note" text-anchor="end">更抽象</text>
 
   <rect
     x="58"
@@ -119,7 +120,7 @@
     stroke="#0072B2"
     stroke-width="2"
   />
-  <text x="121" y="162" class="node-label" text-anchor="middle">当前阶段</text>
+  <text x="121" y="162" class="node-label" text-anchor="middle">高层状态 t</text>
   <line
     x1="194"
     y1="156"
@@ -142,53 +143,52 @@
     stroke="#0072B2"
     stroke-width="2"
   />
-  <text x="399" y="162" class="node-label" text-anchor="middle">远期状态</text>
-  <text x="260" y="208" class="note" text-anchor="middle">
-    忽略短期细节，保留较慢变化的阶段与关系
+  <text x="399" y="162" class="node-label" text-anchor="middle">高层状态 t+k</text>
+  <text x="260" y="204" class="note" text-anchor="middle">
+    舍弃更多短期细节，以较粗粒度预测更长时间尺度
   </text>
 
   <line
-    x1="399"
-    y1="183"
-    x2="399"
-    y2="269"
+    x1="260"
+    y1="270"
+    x2="260"
+    y2="226"
     stroke="#5F6368"
     stroke-width="2.5"
-    stroke-dasharray="7 6"
     marker-end="url(#arrow-gray)"
   />
   <rect
-    x="284"
-    y="230"
-    width="104"
+    x="280"
+    y="229"
+    width="92"
     height="28"
     rx="14"
     fill="#FFFFFF"
     stroke="#B7BCC2"
   />
-  <text x="336" y="249" class="arrow-label" text-anchor="middle" fill="#45484C">
-    形成子目标
+  <text x="326" y="248" class="arrow-label" text-anchor="middle" fill="#45484C">
+    继续抽象
   </text>
 
   <g filter="url(#shadow)">
     <rect
       x="28"
-      y="278"
+      y="270"
       width="464"
-      height="202"
+      height="162"
       rx="22"
       fill="#FFF5E5"
       stroke="#B56F00"
       stroke-width="2"
     />
   </g>
-  <rect x="45" y="298" width="26" height="26" rx="6" fill="#E69F00" />
-  <text x="82" y="320" class="section-title">低层状态 · 更具体</text>
-  <text x="462" y="319" class="note" text-anchor="end">较多细节</text>
+  <rect x="45" y="290" width="26" height="26" rx="6" fill="#E69F00" />
+  <text x="82" y="312" class="section-title">JEPA-1 · 低层状态</text>
+  <text x="462" y="311" class="note" text-anchor="end">更具体</text>
 
   <rect
     x="54"
-    y="352"
+    y="334"
     width="104"
     height="48"
     rx="10"
@@ -196,19 +196,19 @@
     stroke="#B56F00"
     stroke-width="2"
   />
-  <text x="106" y="382" class="node-label" text-anchor="middle">当前状态</text>
+  <text x="106" y="364" class="node-label" text-anchor="middle">低层状态 t</text>
   <line
     x1="166"
-    y1="376"
+    y1="358"
     x2="213"
-    y2="376"
+    y2="358"
     stroke="#B56F00"
     stroke-width="3"
     marker-end="url(#arrow-orange)"
   />
   <rect
     x="222"
-    y="352"
+    y="334"
     width="104"
     height="48"
     rx="10"
@@ -216,19 +216,19 @@
     stroke="#B56F00"
     stroke-width="2"
   />
-  <text x="274" y="382" class="node-label" text-anchor="middle">下一状态</text>
+  <text x="274" y="364" class="node-label" text-anchor="middle">低层状态 t+1</text>
   <line
     x1="334"
-    y1="376"
+    y1="358"
     x2="381"
-    y2="376"
+    y2="358"
     stroke="#B56F00"
     stroke-width="3"
     marker-end="url(#arrow-orange)"
   />
   <rect
     x="390"
-    y="352"
+    y="334"
     width="76"
     height="48"
     rx="10"
@@ -236,12 +236,9 @@
     stroke="#B56F00"
     stroke-width="2"
   />
-  <text x="428" y="382" class="node-label" text-anchor="middle">……</text>
+  <text x="428" y="364" class="node-label" text-anchor="middle">……</text>
 
-  <text x="260" y="430" class="note" text-anchor="middle">
-    保留位置、速度和接触等细节，进行短期逐步预测
-  </text>
-  <text x="260" y="455" class="note" text-anchor="middle">
-    每一步都可以接收动作条件
+  <text x="260" y="414" class="note" text-anchor="middle">
+    保留更多局部细节，预测较短时间尺度上的变化
   </text>
 </svg>
