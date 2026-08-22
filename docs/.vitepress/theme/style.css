@@ -1942,6 +1942,21 @@ aside.VPSidebar {
   max-height: none;
 }
 
+/* 三栏架构对照图横向信息较密，使用正文可用宽度保证标签清晰。 */
+.vp-doc p > img[src$="jepa-architecture-comparison.png"] {
+  width: min(100%, 900px);
+  max-width: 100%;
+  max-height: none;
+}
+
+.vp-doc p:has(> img[src$="jepa-architecture-comparison-mobile.png"]) {
+  display: none;
+}
+
+.vp-doc p > img[src$="jepa-architecture-comparison-mobile.png"] {
+  display: none;
+}
+
 .vp-doc .image-caption {
   color: #86868b;
   font-size: 0.875em;
@@ -2430,6 +2445,25 @@ html {
    20. Mobile Optimizations
    =================================================== */
 @media (max-width: 768px) {
+  .vp-doc p:has(> img[src$="jepa-architecture-comparison.png"]) {
+    display: none;
+  }
+
+  .vp-doc p > img[src$="jepa-architecture-comparison.png"] {
+    display: none;
+  }
+
+  .vp-doc p:has(> img[src$="jepa-architecture-comparison-mobile.png"]) {
+    display: block;
+  }
+
+  .vp-doc p > img[src$="jepa-architecture-comparison-mobile.png"] {
+    display: block;
+    width: min(100%, 420px);
+    max-width: 100%;
+    max-height: none;
+  }
+
   .vp-doc h1 {
     font-size: 2rem;
   }
