@@ -1,0 +1,247 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="520"
+  height="520"
+  viewBox="0 0 520 520"
+  role="img"
+  aria-labelledby="title description"
+>
+  <title id="title">分层状态与多时间尺度预测</title>
+  <desc id="description">
+    高层状态保留较少细节，用于较长时间尺度的预测；低层状态保留较多细节，用于短期逐步预测。高层预测可以为低层提供子目标。
+  </desc>
+  <defs>
+    <marker
+      id="arrow-blue"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0072B2" />
+    </marker>
+    <marker
+      id="arrow-orange"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B56F00" />
+    </marker>
+    <marker
+      id="arrow-gray"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5F6368" />
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow
+        dx="0"
+        dy="3"
+        stdDeviation="5"
+        flood-color="#1D1D1F"
+        flood-opacity="0.08"
+      />
+    </filter>
+    <style>
+      text {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC",
+          "Microsoft YaHei", sans-serif;
+        fill: #1d1d1f;
+      }
+      .section-title {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .node-label {
+        font-size: 16px;
+        font-weight: 650;
+      }
+      .note {
+        font-size: 14px;
+        fill: #5f6368;
+      }
+      .arrow-label {
+        font-size: 13px;
+        font-weight: 600;
+      }
+    </style>
+  </defs>
+
+  <rect
+    x="6"
+    y="6"
+    width="508"
+    height="508"
+    rx="28"
+    fill="#FFFFFF"
+    stroke="#D9DEE3"
+    stroke-width="1.5"
+  />
+  <text x="260" y="42" text-anchor="middle" font-size="22" font-weight="750">
+    同一个世界，不同预测尺度
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect
+      x="28"
+      y="68"
+      width="464"
+      height="158"
+      rx="22"
+      fill="#EAF5FB"
+      stroke="#0072B2"
+      stroke-width="2"
+    />
+  </g>
+  <circle cx="58" cy="98" r="13" fill="#0072B2" />
+  <text x="82" y="105" class="section-title">高层状态 · 更抽象</text>
+  <text x="462" y="104" class="note" text-anchor="end">较少细节</text>
+
+  <rect
+    x="58"
+    y="132"
+    width="126"
+    height="48"
+    rx="24"
+    fill="#FFFFFF"
+    stroke="#0072B2"
+    stroke-width="2"
+  />
+  <text x="121" y="162" class="node-label" text-anchor="middle">当前阶段</text>
+  <line
+    x1="194"
+    y1="156"
+    x2="326"
+    y2="156"
+    stroke="#0072B2"
+    stroke-width="3"
+    marker-end="url(#arrow-blue)"
+  />
+  <text x="260" y="145" class="arrow-label" text-anchor="middle" fill="#005A8D">
+    跨越较长时间
+  </text>
+  <rect
+    x="336"
+    y="132"
+    width="126"
+    height="48"
+    rx="24"
+    fill="#FFFFFF"
+    stroke="#0072B2"
+    stroke-width="2"
+  />
+  <text x="399" y="162" class="node-label" text-anchor="middle">远期状态</text>
+  <text x="260" y="208" class="note" text-anchor="middle">
+    忽略短期细节，保留较慢变化的阶段与关系
+  </text>
+
+  <line
+    x1="399"
+    y1="183"
+    x2="399"
+    y2="269"
+    stroke="#5F6368"
+    stroke-width="2.5"
+    stroke-dasharray="7 6"
+    marker-end="url(#arrow-gray)"
+  />
+  <rect
+    x="284"
+    y="230"
+    width="104"
+    height="28"
+    rx="14"
+    fill="#FFFFFF"
+    stroke="#B7BCC2"
+  />
+  <text x="336" y="249" class="arrow-label" text-anchor="middle" fill="#45484C">
+    形成子目标
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect
+      x="28"
+      y="278"
+      width="464"
+      height="202"
+      rx="22"
+      fill="#FFF5E5"
+      stroke="#B56F00"
+      stroke-width="2"
+    />
+  </g>
+  <rect x="45" y="298" width="26" height="26" rx="6" fill="#E69F00" />
+  <text x="82" y="320" class="section-title">低层状态 · 更具体</text>
+  <text x="462" y="319" class="note" text-anchor="end">较多细节</text>
+
+  <rect
+    x="54"
+    y="352"
+    width="104"
+    height="48"
+    rx="10"
+    fill="#FFFFFF"
+    stroke="#B56F00"
+    stroke-width="2"
+  />
+  <text x="106" y="382" class="node-label" text-anchor="middle">当前状态</text>
+  <line
+    x1="166"
+    y1="376"
+    x2="213"
+    y2="376"
+    stroke="#B56F00"
+    stroke-width="3"
+    marker-end="url(#arrow-orange)"
+  />
+  <rect
+    x="222"
+    y="352"
+    width="104"
+    height="48"
+    rx="10"
+    fill="#FFFFFF"
+    stroke="#B56F00"
+    stroke-width="2"
+  />
+  <text x="274" y="382" class="node-label" text-anchor="middle">下一状态</text>
+  <line
+    x1="334"
+    y1="376"
+    x2="381"
+    y2="376"
+    stroke="#B56F00"
+    stroke-width="3"
+    marker-end="url(#arrow-orange)"
+  />
+  <rect
+    x="390"
+    y="352"
+    width="76"
+    height="48"
+    rx="10"
+    fill="#FFFFFF"
+    stroke="#B56F00"
+    stroke-width="2"
+  />
+  <text x="428" y="382" class="node-label" text-anchor="middle">……</text>
+
+  <text x="260" y="430" class="note" text-anchor="middle">
+    保留位置、速度和接触等细节，进行短期逐步预测
+  </text>
+  <text x="260" y="455" class="note" text-anchor="middle">
+    每一步都可以接收动作条件
+  </text>
+</svg>
