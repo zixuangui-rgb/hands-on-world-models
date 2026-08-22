@@ -2014,6 +2014,295 @@ aside.VPSidebar {
   border-color: rgba(148, 163, 184, 0.16);
 }
 
+/* JEPA 发展时间线：同时呈现里程碑与能力边界。 */
+.vp-doc .jepa-history {
+  position: relative;
+  margin: 28px 0 40px;
+}
+
+.vp-doc .jepa-history::before {
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 83px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(82, 118, 171, 0.28),
+    rgba(47, 125, 116, 0.42),
+    rgba(152, 91, 157, 0.32)
+  );
+  content: "";
+}
+
+.vp-doc .jepa-history-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 68px 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 0;
+  margin: 0 0 16px;
+}
+
+.vp-doc .jepa-history-item:last-child {
+  margin-bottom: 0;
+}
+
+.vp-doc .jepa-history-year {
+  padding-top: 18px;
+  color: var(--vp-c-text-2);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+}
+
+.vp-doc .jepa-history-dot {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin: 21px auto 0;
+  border: 3px solid var(--vp-c-bg);
+  border-radius: 50%;
+  background: #397e78;
+  box-shadow: 0 0 0 2px rgba(57, 126, 120, 0.22);
+}
+
+.vp-doc .jepa-history-card {
+  min-width: 0;
+  padding: 17px 20px 15px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.94),
+    rgba(248, 250, 252, 0.9)
+  );
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045);
+}
+
+.vp-doc .jepa-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+
+.vp-doc .jepa-history-heading strong {
+  color: var(--vp-c-text-1);
+  font-size: 1rem;
+}
+
+.vp-doc .jepa-history-tag {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(71, 85, 105, 0.08);
+  color: #657084;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.vp-doc .jepa-history-tag.is-representation {
+  background: rgba(73, 111, 170, 0.1);
+  color: #496faa;
+}
+
+.vp-doc .jepa-history-tag.is-video {
+  background: rgba(47, 125, 116, 0.11);
+  color: #2f7d74;
+}
+
+.vp-doc .jepa-history-tag.is-action {
+  background: rgba(192, 118, 43, 0.11);
+  color: #a96525;
+}
+
+.vp-doc .jepa-history-tag.is-frontier {
+  background: rgba(139, 83, 146, 0.1);
+  color: #85508d;
+}
+
+.vp-doc .jepa-history-card p {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.91rem;
+  line-height: 1.72;
+}
+
+.vp-doc .jepa-history-card .jepa-history-boundary {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: var(--vp-c-text-3);
+  font-size: 0.82rem;
+}
+
+.vp-doc .jepa-history-boundary b {
+  color: var(--vp-c-text-2);
+}
+
+.dark .vp-doc .jepa-history-card {
+  border-color: rgba(148, 163, 184, 0.15);
+  background: linear-gradient(
+    145deg,
+    rgba(31, 41, 55, 0.76),
+    rgba(20, 28, 40, 0.78)
+  );
+  box-shadow: none;
+}
+
+.dark .vp-doc .jepa-history-card .jepa-history-boundary {
+  border-top-color: rgba(148, 163, 184, 0.12);
+}
+
+/* 2026 年三条主要研究前沿。 */
+.vp-doc .jepa-frontier-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 24px 0 36px;
+}
+
+.vp-doc .jepa-frontier-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 156px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 14px;
+  margin: 0;
+  padding: 20px 18px 17px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+}
+
+.vp-doc .jepa-frontier-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: var(--jepa-frontier-color);
+  content: "";
+}
+
+.vp-doc .jepa-frontier-card.is-local {
+  --jepa-frontier-color: #4d73a8;
+}
+
+.vp-doc .jepa-frontier-card.is-stable {
+  --jepa-frontier-color: #2f7d74;
+}
+
+.vp-doc .jepa-frontier-card.is-unified {
+  --jepa-frontier-color: #8b5392;
+}
+
+.vp-doc .jepa-frontier-index {
+  display: block;
+  margin: 2px 0 0;
+  color: var(--jepa-frontier-color);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.vp-doc .jepa-frontier-card > strong {
+  display: block;
+  margin: 0;
+  color: var(--vp-c-text-1);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.vp-doc .jepa-frontier-card p {
+  grid-column: 3;
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.88rem;
+  line-height: 1.72;
+}
+
+.vp-doc .jepa-frontier-card .jepa-frontier-note {
+  grid-column: 3;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: var(--vp-c-text-3);
+  font-size: 0.8rem;
+}
+
+.dark .vp-doc .jepa-frontier-card {
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+/* 对当前证据强度作三档区分，避免把早期规划结果写成路线完成。 */
+.vp-doc .jepa-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0 28px;
+}
+
+.vp-doc .jepa-status-card {
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+}
+
+.vp-doc .jepa-status-card > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--jepa-status-color);
+  font-size: 0.73rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+}
+
+.vp-doc .jepa-status-card > strong {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--vp-c-text-1);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.vp-doc .jepa-status-card p {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.vp-doc .jepa-status-card.is-established {
+  --jepa-status-color: #2f7d74;
+  background: rgba(47, 125, 116, 0.055);
+}
+
+.vp-doc .jepa-status-card.is-early {
+  --jepa-status-color: #a96525;
+  background: rgba(192, 118, 43, 0.055);
+}
+
+.vp-doc .jepa-status-card.is-open {
+  --jepa-status-color: #85508d;
+  background: rgba(139, 83, 146, 0.05);
+}
+
+.dark .vp-doc .jepa-status-card {
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
 .vp-doc .image-caption {
   color: #86868b;
   font-size: 0.875em;
@@ -2504,6 +2793,60 @@ html {
 @media (max-width: 768px) {
   .vp-doc .jepa-outcome-grid {
     grid-template-columns: 1fr;
+  }
+
+  .vp-doc .jepa-history::before {
+    top: 42px;
+    bottom: 24px;
+    left: 7px;
+  }
+
+  .vp-doc .jepa-history-item {
+    grid-template-columns: 22px minmax(0, 1fr);
+    margin-bottom: 18px;
+  }
+
+  .vp-doc .jepa-history-year {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 0 0 7px;
+    color: var(--vp-c-text-3);
+    font-size: 0.76rem;
+  }
+
+  .vp-doc .jepa-history-dot {
+    grid-column: 1;
+    grid-row: 2;
+    width: 11px;
+    height: 11px;
+    margin: 22px auto 0 2px;
+  }
+
+  .vp-doc .jepa-history-card {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 16px;
+  }
+
+  .vp-doc .jepa-history-heading {
+    align-items: flex-start;
+  }
+
+  .vp-doc .jepa-frontier-grid,
+  .vp-doc .jepa-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vp-doc .jepa-frontier-card {
+    display: block;
+  }
+
+  .vp-doc .jepa-frontier-index {
+    margin-bottom: 10px;
+  }
+
+  .vp-doc .jepa-frontier-card > strong {
+    margin-bottom: 9px;
   }
 
   .vp-doc p:has(> img[src$="jepa-architecture-comparison.png"]) {
