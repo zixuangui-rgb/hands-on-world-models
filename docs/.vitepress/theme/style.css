@@ -2160,7 +2160,7 @@ aside.VPSidebar {
   border-top-color: rgba(148, 163, 184, 0.12);
 }
 
-/* 2026 年三条主要研究前沿。 */
+/* 2026 年五条并行研究线。 */
 .vp-doc .jepa-frontier-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -2192,15 +2192,23 @@ aside.VPSidebar {
   content: "";
 }
 
-.vp-doc .jepa-frontier-card.is-local {
-  --jepa-frontier-color: #4d73a8;
-}
-
-.vp-doc .jepa-frontier-card.is-stable {
+.vp-doc .jepa-frontier-card.is-training {
   --jepa-frontier-color: #2f7d74;
 }
 
-.vp-doc .jepa-frontier-card.is-unified {
+.vp-doc .jepa-frontier-card.is-architecture {
+  --jepa-frontier-color: #4d73a8;
+}
+
+.vp-doc .jepa-frontier-card.is-dynamics {
+  --jepa-frontier-color: #b16f2f;
+}
+
+.vp-doc .jepa-frontier-card.is-interface {
+  --jepa-frontier-color: #a14f64;
+}
+
+.vp-doc .jepa-frontier-card.is-planning {
   --jepa-frontier-color: #8b5392;
 }
 
