@@ -166,31 +166,31 @@ JEPA 提供了忽略差异和表达不确定性的机制，却不会自动知道
 
 JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问题**：target 从静态图像中的区域扩展到视频中的时空状态，动作随后成为 Predictor 的条件，预测结果才开始被用于规划。
 
-因此，这条路线不应按论文名称排列，而应看机器学到的内部状态能够承担什么任务：
+要看清这条路线如何走到今天，可以先把最重要的工作按时间串起来。每一步都扩展了内部状态能够承担的任务：
 
 **描述静态场景 → 捕捉时间变化 → 预测动作后果 → 支持受限规划。** 最后一步仍需借助外部规划器。
 
-### 主线：预测关系逐渐接近行动
+### 时间线：从 JEPA 蓝图到行动规划
 
-<div class="jepa-history" role="list" aria-label="JEPA 能力发展主线">
+<div class="jepa-history" role="list" aria-label="JEPA 重要工作时间线">
   <article class="jepa-history-item" role="listitem">
-    <div class="jepa-history-year">蓝图</div>
+    <div class="jepa-history-year">2022</div>
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>预测抽象的内部状态</strong>
-        <span class="jepa-history-tag is-blueprint">LeCun 2022</span>
+        <strong>JEPA 被提出为世界模型的研究蓝图</strong>
+        <span class="jepa-history-tag is-blueprint">LeCun</span>
       </div>
-      <p>JEPA 被提出时的目标，是让世界模型预测表示，而不是还原观测中的全部细节；H-JEPA 则进一步设想在多个抽象层级和时间尺度上进行预测。</p>
+      <p><a href="https://openreview.net/forum?id=BZ5a1r-kVsf">A Path Towards Autonomous Machine Intelligence</a> 提出：世界模型应预测抽象表示，而不是还原观测中的全部细节；H-JEPA 则进一步设想在多个抽象层级和时间尺度上进行预测。</p>
       <p class="jepa-history-boundary"><b>边界：</b>这是一份研究蓝图，不是已经完成的系统。</p>
     </div>
   </article>
   <article class="jepa-history-item" role="listitem">
-    <div class="jepa-history-year">静态</div>
+    <div class="jepa-history-year">2023</div>
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>从图像的一部分预测另一部分</strong>
+        <strong>先在静态图像上验证表示预测</strong>
         <span class="jepa-history-tag is-representation">I-JEPA</span>
       </div>
       <p><code>可见区域 → 被遮挡区域的表示</code>。<a href="https://arxiv.org/abs/2301.08243">I-JEPA</a> 给出了可扩展的图像实验，说明这种目标可以学到有用的静态视觉表征。</p>
@@ -198,48 +198,48 @@ JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问�
     </div>
   </article>
   <article class="jepa-history-item" role="listitem">
-    <div class="jepa-history-year">时间</div>
+    <div class="jepa-history-year">2024</div>
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>从静态场景走向时间变化</strong>
-        <span class="jepa-history-tag is-video">V-JEPA / V-JEPA 2</span>
+        <strong>从静态场景走向视频中的时间变化</strong>
+        <span class="jepa-history-tag is-video">V-JEPA</span>
       </div>
-      <p><code>可见时空区域 → 被遮挡时空区域的表示</code>。<a href="https://arxiv.org/abs/2404.08471">V-JEPA</a> 将预测扩展到视频，V-JEPA 2 又扩大了模型和训练数据的规模。</p>
-      <p class="jepa-history-boundary"><b>边界：</b>基础模型从无动作视频中学习，主要预测视频内被遮挡的表示；看到时间变化，不等于能够区分不同动作造成的后果。</p>
+      <p><code>可见时空区域 → 被遮挡时空区域的表示</code>。<a href="https://arxiv.org/abs/2404.08471">V-JEPA</a> 将预测扩展到视频，让模型从无动作标签的视频中学习时间变化。</p>
+      <p class="jepa-history-boundary"><b>边界：</b>看到画面如何变化，不等于能够区分不同动作造成的后果。</p>
     </div>
   </article>
   <article class="jepa-history-item" role="listitem">
-    <div class="jepa-history-year">动作</div>
+    <div class="jepa-history-year">2025</div>
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>让动作进入预测条件</strong>
-        <span class="jepa-history-tag is-action">V-JEPA 2-AC</span>
+        <strong>从大规模视频预训练走向动作与规划</strong>
+        <span class="jepa-history-tag is-action">V-JEPA 2 / 2-AC</span>
       </div>
-      <p><code>历史状态 + 候选动作 → 下一状态表示</code>。<a href="https://arxiv.org/abs/2506.09985">V-JEPA 2-AC</a> 冻结 V-JEPA 2 的视频编码器，再用机器人轨迹训练新的动作条件 Predictor。</p>
-      <p class="jepa-history-boundary"><b>边界：</b>真正接收动作的是后训练的 2-AC，而不是基础 V-JEPA 2；现有证据仍主要来自受限任务和较短的预测范围。</p>
+      <p><a href="https://arxiv.org/abs/2506.09985">V-JEPA 2</a> 扩大了视频预训练的模型与数据规模；随后，V-JEPA 2-AC 冻结视频 Encoder，用机器人轨迹训练动作条件 Predictor，并将预测结果接入 MPC 选择动作。</p>
+      <p class="jepa-history-boundary"><b>边界：</b>基础 V-JEPA 2 不接收动作；动作预测来自后训练的 2-AC。现有规划仍依赖外部目标、代价和 Planner，主要证据来自受限任务与较短范围。</p>
     </div>
   </article>
   <article class="jepa-history-item" role="listitem">
-    <div class="jepa-history-year">规划</div>
+    <div class="jepa-history-year">2025–26</div>
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>用预测结果选择动作</strong>
-        <span class="jepa-history-tag is-frontier">V-JEPA 2-AC + MPC</span>
+        <strong>主线走到行动规划，研究图景转向多线并行</strong>
+        <span class="jepa-history-tag is-frontier">多线并行</span>
       </div>
-      <p><code>候选动作 → 预测后果 → 比较目标距离或代价 → 执行动作</code>。V-JEPA 2-AC 已经能够进入 MPC 闭环，在新的机器人环境中完成图像目标驱动的抓取与放置任务。</p>
-      <p class="jepa-history-boundary"><b>边界：</b>论文中的抓放任务由人工给定中间子目标图像，主要实验的规划步长为 1。世界模型负责预测，MPC 负责规划，CEM 只是其中搜索动作序列的一种优化方法；目标、评价方式与规划器都来自 JEPA Predictor 之外。</p>
+      <p>从 2025 年末的 <a href="https://arxiv.org/abs/2511.08544">LeJEPA</a>，到 2026 年的 <a href="https://arxiv.org/abs/2603.14482">V-JEPA 2.1</a>、<a href="https://arxiv.org/abs/2603.19312">LeWorldModel</a> 与 <a href="https://arxiv.org/abs/2604.03208">HWM</a>，不同工作开始分别处理训练稳定性、状态表征、端到端动力学和长程规划等瓶颈。</p>
+      <p class="jepa-history-boundary"><b>边界：</b>这些工作不是依次替代的“下一代 JEPA”，而是下面几条并行研究线的代表。</p>
     </div>
   </article>
 </div>
 
-_到 V-JEPA 2-AC 为止，这条路线仍可按能力递进理解。截至 2026 年，前沿问题已经在不同环节并行展开。_
+_时间线回答的是“JEPA 如何从表示学习走到受限规划”；到 2026 年，还需要横向观察不同工作正在补哪一个瓶颈。_
 
-### 截至 2026：五条研究线并行推进
+### 截至 2026：五条前沿路线并行推进
 
-V-JEPA 2-AC 说明，潜在状态预测已经可以进入短期控制闭环。但截至 2026 年，研究重点已经无法概括为一条单线升级，而是集中在五个相互关联的瓶颈：状态能否稳定学出？模型应该怎样组织？Predictor 能否描述动作造成的未来？表示是否适合行动？Planner 又怎样利用预测想得更远？
+截至 2026 年，问题不再是“哪一个模型接替 V-JEPA 2-AC”，而是怎样共同补齐五个相互关联的瓶颈：状态能否稳定学出？模型应该怎样组织？Predictor 能否描述动作造成的未来？表示是否适合行动？Planner 又怎样利用预测想得更远？
 
 这不是五代依次出现的模型，而是同一个系统中的五个研究瓶颈。
 
