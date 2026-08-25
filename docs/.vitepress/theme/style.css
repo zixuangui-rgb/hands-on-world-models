@@ -1957,61 +1957,252 @@ aside.VPSidebar {
   display: none;
 }
 
-/* JEPA 预测流程中的三类 target 差异。 */
-.vp-doc .jepa-outcome-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 24px 0;
+/* 一次 JEPA 训练的最小数据流。 */
+.vp-doc .jepa-flow-board {
+  margin: 26px 0;
+  padding: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    145deg,
+    rgba(47, 125, 116, 0.045),
+    var(--surface-secondary) 42%
+  );
 }
 
-.vp-doc .jepa-outcome-card {
+.vp-doc .jepa-flow-branch + .jepa-flow-branch {
+  margin-top: 17px;
+  padding-top: 17px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.vp-doc .jepa-flow-branch-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--vp-c-text-2);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+}
+
+.vp-doc .jepa-flow-chain {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.vp-doc .jepa-flow-node {
+  display: flex;
+  flex: 1 1 0;
   min-width: 0;
-  margin: 0;
-  padding: 18px 18px 16px;
+  min-height: 92px;
+  padding: 12px 10px;
   border: 1px solid rgba(148, 163, 184, 0.2);
-  border-top: 3px solid var(--jepa-outcome-color);
+  border-radius: var(--radius-md);
+  background: var(--vp-c-bg);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.vp-doc .jepa-flow-node.is-observation {
+  background: rgba(73, 111, 170, 0.055);
+}
+
+.vp-doc .jepa-flow-node.is-state {
+  border-color: rgba(47, 125, 116, 0.25);
+  background: rgba(47, 125, 116, 0.07);
+}
+
+.vp-doc .jepa-flow-node.is-predictor {
+  border-color: rgba(192, 118, 43, 0.26);
+  background: rgba(192, 118, 43, 0.075);
+}
+
+.vp-doc .jepa-flow-node.is-prediction {
+  border-color: rgba(139, 83, 146, 0.25);
+  background: rgba(139, 83, 146, 0.07);
+}
+
+.vp-doc .jepa-flow-node small,
+.vp-doc .jepa-flow-node span {
+  color: var(--vp-c-text-2);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.vp-doc .jepa-flow-node strong {
+  margin: 4px 0;
+  color: var(--vp-c-text-1);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.vp-doc .jepa-flow-node code,
+.vp-doc .jepa-flow-compare code {
+  white-space: nowrap;
+}
+
+.vp-doc .jepa-flow-arrow {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--vp-c-text-3);
+  font-size: 1.05rem;
+}
+
+.vp-doc .jepa-flow-compare {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 13px 16px;
+  border: 1px solid rgba(47, 125, 116, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(47, 125, 116, 0.065);
+  text-align: center;
+}
+
+.vp-doc .jepa-flow-compare strong {
+  color: var(--vp-c-text-1);
+  font-size: 0.9rem;
+}
+
+.vp-doc .jepa-flow-compare > span {
+  grid-column: 1 / -1;
+  color: var(--vp-c-text-2);
+  font-size: 0.75rem;
+}
+
+/* 四步训练闭环。 */
+.vp-doc .jepa-step-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.vp-doc .jepa-step-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 2px 10px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: var(--radius-lg);
   background: var(--surface-secondary);
 }
 
-.vp-doc .jepa-outcome-card.is-predictable {
-  --jepa-outcome-color: #2f7d74;
+.vp-doc .jepa-step-card > span {
+  grid-row: 1 / 3;
+  color: var(--vp-c-text-2);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 
-.vp-doc .jepa-outcome-card.is-ignored {
-  --jepa-outcome-color: #7c8798;
-}
-
-.vp-doc .jepa-outcome-card.is-uncertain {
-  --jepa-outcome-color: #c0762b;
-}
-
-.vp-doc .jepa-outcome-label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--jepa-outcome-color);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.vp-doc .jepa-outcome-card strong {
-  display: block;
-  margin-bottom: 8px;
+.vp-doc .jepa-step-card strong {
   color: var(--vp-c-text-1);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-.vp-doc .jepa-outcome-card p {
+.vp-doc .jepa-step-card p {
+  margin: 4px 0 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+/* target 差异先判断是否保留，再判断能否确定。 */
+.vp-doc .jepa-decision {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.vp-doc .jepa-decision-card {
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 3px solid var(--jepa-decision-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+}
+
+.vp-doc .jepa-decision-card.is-ignored {
+  --jepa-decision-color: #7c8798;
+}
+
+.vp-doc .jepa-decision-card.is-kept {
+  --jepa-decision-color: #2f7d74;
+}
+
+.vp-doc .jepa-decision-card > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--vp-c-text-2);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.vp-doc .jepa-decision-card > strong {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--vp-c-text-1);
+  font-size: 0.98rem;
+}
+
+.vp-doc .jepa-decision-card p {
   margin: 0;
   color: var(--vp-c-text-2);
-  font-size: 0.9rem;
-  line-height: 1.7;
+  font-size: 0.84rem;
+  line-height: 1.68;
 }
 
-.dark .vp-doc .jepa-outcome-card {
-  border-color: rgba(148, 163, 184, 0.16);
+.vp-doc .jepa-decision-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vp-doc .jepa-decision-options > div {
+  padding: 13px;
+  border-radius: var(--radius-md);
+  background: var(--vp-c-bg);
+}
+
+.vp-doc .jepa-decision-options .is-predictable {
+  border-left: 3px solid #2f7d74;
+}
+
+.vp-doc .jepa-decision-options .is-uncertain {
+  border-left: 3px solid #c0762b;
+}
+
+.vp-doc .jepa-decision-options small,
+.vp-doc .jepa-decision-options strong {
+  display: block;
+}
+
+.vp-doc .jepa-decision-options small {
+  margin-bottom: 4px;
+  color: var(--vp-c-text-2);
+  font-size: 0.7rem;
+}
+
+.vp-doc .jepa-decision-options strong {
+  margin-bottom: 7px;
+  color: var(--vp-c-text-1);
+  font-size: 0.9rem;
+}
+
+.dark .vp-doc .jepa-flow-board,
+.dark .vp-doc .jepa-step-card {
+  border-color: rgba(148, 163, 184, 0.15);
 }
 
 /* JEPA 发展时间线：同时呈现里程碑与能力边界。 */
@@ -2122,11 +2313,6 @@ aside.VPSidebar {
   color: #a96525;
 }
 
-.vp-doc .jepa-history-tag.is-frontier {
-  background: rgba(139, 83, 146, 0.1);
-  color: #85508d;
-}
-
 .vp-doc .jepa-history-card p {
   margin: 0;
   color: var(--vp-c-text-2);
@@ -2138,7 +2324,7 @@ aside.VPSidebar {
   margin-top: 10px;
   padding-top: 9px;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-2);
   font-size: 0.82rem;
 }
 
@@ -2158,6 +2344,60 @@ aside.VPSidebar {
 
 .dark .vp-doc .jepa-history-card .jepa-history-boundary {
   border-top-color: rgba(148, 163, 184, 0.12);
+}
+
+/* 五条研究线在训练、模型与系统三个层次上的关系。 */
+.vp-doc .jepa-frontier-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  margin: 22px 0 26px;
+}
+
+.vp-doc .jepa-frontier-map section {
+  min-width: 0;
+  padding: 15px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+  text-align: center;
+}
+
+.vp-doc .jepa-frontier-map section > span,
+.vp-doc .jepa-frontier-map section > strong {
+  display: block;
+}
+
+.vp-doc .jepa-frontier-map section > span {
+  margin-bottom: 5px;
+  color: var(--vp-c-text-2);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.vp-doc .jepa-frontier-map section > strong {
+  color: var(--vp-c-text-1);
+  font-size: 0.9rem;
+}
+
+.vp-doc .jepa-frontier-map section > p {
+  margin: 5px 0 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.vp-doc .jepa-frontier-map-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--vp-c-text-3);
+  font-size: 1rem;
+}
+
+.dark .vp-doc .jepa-frontier-map section {
+  border-color: rgba(148, 163, 184, 0.15);
 }
 
 /* 2026 年五条并行研究线。 */
@@ -2215,7 +2455,7 @@ aside.VPSidebar {
 .vp-doc .jepa-frontier-index {
   display: block;
   margin: 2px 0 0;
-  color: var(--jepa-frontier-color);
+  color: var(--vp-c-text-2);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
@@ -2243,71 +2483,11 @@ aside.VPSidebar {
   margin-top: 12px;
   padding-top: 11px;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-2);
   font-size: 0.8rem;
 }
 
 .dark .vp-doc .jepa-frontier-card {
-  border-color: rgba(148, 163, 184, 0.15);
-}
-
-/* 对当前证据强度作三档区分，避免把早期规划结果写成路线完成。 */
-.vp-doc .jepa-status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin: 24px 0 28px;
-}
-
-.vp-doc .jepa-status-card {
-  min-width: 0;
-  margin: 0;
-  padding: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: var(--radius-lg);
-  background: var(--surface-secondary);
-}
-
-.vp-doc .jepa-status-card > span {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--jepa-status-color);
-  font-size: 0.73rem;
-  font-weight: 750;
-  letter-spacing: 0.03em;
-}
-
-.vp-doc .jepa-status-card > strong {
-  display: block;
-  margin-bottom: 9px;
-  color: var(--vp-c-text-1);
-  font-size: 0.94rem;
-  line-height: 1.55;
-}
-
-.vp-doc .jepa-status-card p {
-  margin: 0;
-  color: var(--vp-c-text-2);
-  font-size: 0.84rem;
-  line-height: 1.7;
-}
-
-.vp-doc .jepa-status-card.is-established {
-  --jepa-status-color: #2f7d74;
-  background: rgba(47, 125, 116, 0.055);
-}
-
-.vp-doc .jepa-status-card.is-early {
-  --jepa-status-color: #a96525;
-  background: rgba(192, 118, 43, 0.055);
-}
-
-.vp-doc .jepa-status-card.is-open {
-  --jepa-status-color: #85508d;
-  background: rgba(139, 83, 146, 0.05);
-}
-
-.dark .vp-doc .jepa-status-card {
   border-color: rgba(148, 163, 184, 0.15);
 }
 
@@ -2798,11 +2978,46 @@ html {
 /* ===================================================
    20. Mobile Optimizations
    =================================================== */
-@media (max-width: 768px) {
-  .vp-doc .jepa-outcome-grid {
+@media (max-width: 640px) {
+  .vp-doc .jepa-flow-board {
+    padding: 15px;
+  }
+
+  .vp-doc .jepa-flow-chain {
+    flex-direction: column;
+  }
+
+  .vp-doc .jepa-flow-node {
+    min-height: 72px;
+  }
+
+  .vp-doc .jepa-flow-arrow {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+
+  .vp-doc .jepa-flow-compare {
+    gap: 7px;
+    padding: 12px;
+  }
+
+  .vp-doc .jepa-step-grid,
+  .vp-doc .jepa-decision,
+  .vp-doc .jepa-decision-options {
     grid-template-columns: 1fr;
   }
 
+  .vp-doc .jepa-frontier-map {
+    grid-template-columns: 1fr;
+  }
+
+  .vp-doc .jepa-frontier-map-arrow {
+    justify-content: center;
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 768px) {
   .vp-doc .jepa-history::before {
     top: 42px;
     bottom: 24px;
@@ -2818,7 +3033,7 @@ html {
     grid-column: 2;
     grid-row: 1;
     padding: 0 0 7px;
-    color: var(--vp-c-text-3);
+    color: var(--vp-c-text-2);
     font-size: 0.76rem;
   }
 
@@ -2840,8 +3055,7 @@ html {
     align-items: flex-start;
   }
 
-  .vp-doc .jepa-frontier-grid,
-  .vp-doc .jepa-status-grid {
+  .vp-doc .jepa-frontier-grid {
     grid-template-columns: 1fr;
   }
 

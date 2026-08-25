@@ -89,84 +89,166 @@ JEPA 由此出现：它仍然通过预测来学习，但把目标从观测本身
 
 ## 5.1.2　JEPA 的核心：在表示空间中预测
 
-JEPA 的核心计算关系可以概括为：给定一部分信息，JEPA 先把它编码成 **context 表示**，再用 Predictor 预测另一部分信息的 **target 表示**。
+要看懂这句话，先要分清**原始信息**和**表示**。以遮挡图像为例：模型已经看到的区域是 context $x$，被遮住但真实存在的区域是 target $y$；Encoder 输出的内部向量或 token 序列，才是它们的表示 $s_x$ 和 $s_y$。表示不是另一张图，也不是人类预先写好的“位置”或“物体”等变量。
 
-### JEPA 架构示意图
+### 一次 JEPA 预测，数据怎样流动？
 
-![JEA、生成式架构与 JEPA 的结构对比](/jepa/jepa-architecture-comparison.png)
+一次最简单的 JEPA 训练，可以沿着下面两条分支阅读。
 
-![JEA、生成式架构与 JEPA 的纵向结构对比](/jepa/jepa-architecture-comparison-mobile.png)
+<div class="jepa-flow-board" role="figure" aria-label="一次 JEPA 训练的数据流">
+  <section class="jepa-flow-branch">
+    <span class="jepa-flow-branch-label">预测分支</span>
+    <div class="jepa-flow-chain">
+      <div class="jepa-flow-node is-observation">
+        <small>已知信息</small>
+        <strong>context <code>x</code></strong>
+        <span>可见区域</span>
+      </div>
+      <span class="jepa-flow-arrow" aria-hidden="true">→</span>
+      <div class="jepa-flow-node">
+        <small>编码</small>
+        <strong>Context Encoder</strong>
+      </div>
+      <span class="jepa-flow-arrow" aria-hidden="true">→</span>
+      <div class="jepa-flow-node is-state">
+        <small>context 表示</small>
+        <strong><code>s<sub>x</sub></code></strong>
+      </div>
+      <span class="jepa-flow-arrow" aria-hidden="true">→</span>
+      <div class="jepa-flow-node is-predictor">
+        <small>加入已知条件 <code>c</code></small>
+        <strong>Predictor</strong>
+      </div>
+      <span class="jepa-flow-arrow" aria-hidden="true">→</span>
+      <div class="jepa-flow-node is-prediction">
+        <small>预测结果</small>
+        <strong><code>ŝ<sub>y</sub></code></strong>
+      </div>
+    </div>
+  </section>
+  <section class="jepa-flow-branch">
+    <span class="jepa-flow-branch-label">参照分支 · 真实 target 的表示仅在训练时参与损失</span>
+    <div class="jepa-flow-chain">
+      <div class="jepa-flow-node is-observation">
+        <small>真实内容</small>
+        <strong>target <code>y</code></strong>
+        <span>被遮区域</span>
+      </div>
+      <span class="jepa-flow-arrow" aria-hidden="true">→</span>
+      <div class="jepa-flow-node">
+        <small>编码</small>
+        <strong>Target Encoder</strong>
+      </div>
+      <span class="jepa-flow-arrow" aria-hidden="true">→</span>
+      <div class="jepa-flow-node is-state">
+        <small>target 表示</small>
+        <strong><code>s<sub>y</sub></code></strong>
+      </div>
+    </div>
+  </section>
+  <div class="jepa-flow-compare">
+    <code>ŝ<sub>y</sub></code>
+    <strong>在表示空间中比较</strong>
+    <code>s<sub>y</sub></code>
+    <span>Predictor 不会看到真实 target 的内容。</span>
+  </div>
+</div>
 
-_图 5.2　三类自监督学习架构的对比。JEA 直接比较两侧表示；生成式架构预测原始目标 $y$；JEPA 预测目标的表示 $s_y$。来源：[I-JEPA 论文 Figure 2](https://openaccess.thecvf.com/content/CVPR2023/papers/Assran_Self-Supervised_Learning_From_Images_With_a_Joint-Embedding_Predictive_Architecture_CVPR_2023_paper.pdf)。_
+_为突出核心关系，图中省略了实现细节：在 I-JEPA 中，Target Encoder 会先处理完整图像，再选出目标区域对应的特征。_
 
-JEPA 这个名字描述的正是图中最右侧的计算关系：
+沿着这张图，一次训练只做四件事：
 
-| 名称                | 含义                                                                                |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| **Joint Embedding** | $x$ 和 $y$ 分别经过编码器得到表示；模型在表示空间中学习二者的依赖关系               |
-| **Predictive**      | Predictor 根据 $x$ 的表示生成对 $y$ 表示的预测，而不是直接令两侧表示相等            |
-| **Architecture**    | 它规定的是一种学习结构，不限定输入模态、网络类型或 context 与 target 的具体构造方式 |
+<div class="jepa-step-grid" role="list" aria-label="一次 JEPA 训练的四个步骤">
+  <section class="jepa-step-card" role="listitem">
+    <span>01</span>
+    <strong>构造问题</strong>
+    <p>把可见区域作为 context，把被遮区域作为 target；target 的位置是已知条件 <code>c</code>。</p>
+  </section>
+  <section class="jepa-step-card" role="listitem">
+    <span>02</span>
+    <strong>分别编码</strong>
+    <p>两个 Encoder 分别得到 <code>s<sub>x</sub></code> 和 <code>s<sub>y</sub></code>。</p>
+  </section>
+  <section class="jepa-step-card" role="listitem">
+    <span>03</span>
+    <strong>预测表示</strong>
+    <p>Predictor 根据 <code>s<sub>x</sub></code> 和 <code>c</code> 产生 <code>ŝ<sub>y</sub></code>。</p>
+  </section>
+  <section class="jepa-step-card" role="listitem">
+    <span>04</span>
+    <strong>提供训练信号</strong>
+    <p>比较 <code>ŝ<sub>y</sub></code> 与 <code>s<sub>y</sub></code>，用二者的距离训练模型。</p>
+  </section>
+</div>
 
-用最小的一组式子表示，就是：
+把这四步压缩成公式，就是：
 
 $$
 s_x = E_x(x), \qquad s_y = E_y(y)
 $$
 
 $$
-\hat{s}_y = P(s_x,c,z), \qquad \mathcal{L}_{\mathrm{pred}} = D(\hat{s}_y,s_y)
+\hat{s}_y = P(s_x,c), \qquad \mathcal{L}_{\mathrm{pred}} = D(\hat{s}_y,s_y)
 $$
 
-其中，$x$ 是已经给出的 context，$y$ 是要预测的 target。两个编码器 $E_x$ 和 $E_y$ 不必具有相同结构，也不必共享参数；真正需要与 $s_y$ 比较的是 Predictor 的输出 $\hat{s}_y$，而不是 $s_x$ 本身。
+其中，$E_x$ 和 $E_y$ 是 Encoder，$P$ 是 Predictor，$D$ 是衡量两个表示差异的函数，$\mathcal{L}_{\mathrm{pred}}$ 是由此得到的预测损失。$c$ 是模型已经知道的条件：在这个例子中，它是 target 的位置；在其他任务中，也可以是预测的时间间隔或计划执行的动作。两个 Encoder 是否共享参数、具体怎样更新，不改变上面的基本数据流，这些训练细节将在 5.2 中展开。
 
-$c$ 表示模型已经知道的条件，例如 target 的位置、预测的时间间隔或计划执行的动作；$z$ 是可选的潜变量，用来表示 target 中存在、却无法由 context 确定的信息。这里把二者分开书写，是为了避免把“已知条件”和“未知因素”混为一谈。LeCun 在 2022 年给出的通用 JEPA 使用的是更简洁的写法 $P(s_x,z)$。
+完成这条最小流程后，再回看 JEA（Joint Embedding Architecture，联合嵌入架构）、生成式架构与 JEPA 的对比：
 
-### 从 context 到 target：JEPA 如何完成一次预测
+![JEA、生成式架构与 JEPA 的结构对比](/jepa/jepa-architecture-comparison.png)
 
-上面的两行公式，可以拆成一次训练中的四个步骤。
+![JEA、生成式架构与 JEPA 的纵向结构对比](/jepa/jepa-architecture-comparison-mobile.png)
 
-1. **构造预测关系。** 从数据中取出 context $x$ 和 target $y$。它们可以是同一幅图像的不同区域、同一段视频的不同片段，也可以是当前状态与未来状态。若 target 的位置、时间间隔或计划执行的动作已经给定，就把它们作为条件 $c$。
-2. **分别编码两端。** Context Encoder 将已知信息编码为 $s_x$；Target Encoder 将真实 target 编码为 $s_y$。$s_y$ 是训练时的参照，Predictor 并不会直接看到原始的 $y$。
-3. **预测 target 表示。** Predictor 根据 $s_x$、已知条件 $c$ 和可选的潜变量 $z$，产生预测 $\hat{s}_y$。它输出的是 target 的表示，而不是 target 本身。
-4. **在表示空间中比较。** 距离 $D(\hat{s}_y,s_y)$ 衡量预测与参照是否一致，并成为训练信号。至于两个编码器具体怎样更新、怎样避免得到无信息的表示，将在 5.2 中展开。
+_图 5.2　三类自监督学习架构的对比。JEA 直接比较两侧表示；生成式架构预测原始 target $y$；JEPA 预测 target 的表示 $s_y$。来源：[I-JEPA 论文 Figure 2](https://openaccess.thecvf.com/content/CVPR2023/papers/Assran_Self-Supervised_Learning_From_Images_With_a_Joint-Embedding_Predictive_Architecture_CVPR_2023_paper.pdf)。_
 
-这里最关键的区别是：**预测误差比较的是 $\hat{s}_y$ 与 $s_y$，不是 $\hat{y}$ 与 $y$。** 因此，原始 target 中的一项差异是否需要被预测，取决于它是否改变了 $s_y$。
+这也解释了 JEPA 的名字：**Joint Embedding** 表示 context 与 target 都会被编码，**Predictive** 表示一侧的表示用于预测另一侧，**Architecture** 则说明它规定的是计算关系，而不是某种固定模态或网络。它与生成式预测最直接的区别是：Predictor 输出的是 target 表示，而不是 target 本身。
 
-<div class="jepa-outcome-grid">
-  <section class="jepa-outcome-card is-predictable">
-    <span class="jepa-outcome-label">能够确定</span>
-    <strong>保留并预测</strong>
-    <p>如果一种变化被保留在 <code>s_y</code> 中，并且能够由 <code>s_x</code> 和已知条件 <code>c</code> 推出，Predictor 就需要学会这种关系。</p>
+### 在表示空间预测，究竟改变了什么？
+
+最关键的区别是：预测误差比较的是 $\hat{s}_y$ 与 $s_y$，不是 $\hat{y}$ 与 $y$。因此，原始 target 中的一项差异是否需要被预测，要依次回答两个问题。
+
+<div class="jepa-decision" role="group" aria-label="target 中的差异怎样进入 JEPA 预测">
+  <section class="jepa-decision-card is-ignored">
+    <span>第一问：需要进入目标表示吗？</span>
+    <strong>不需要：在表示中合并</strong>
+    <p>如果不同的 target 被编码为相同或相近的 <code>s<sub>y</sub></code>，这项差异就不会进入预测误差，也不需要被恢复。</p>
   </section>
-  <section class="jepa-outcome-card is-ignored">
-    <span class="jepa-outcome-label">不必区分</span>
-    <strong>在表示中合并</strong>
-    <p>如果不同的 target 被编码为相同或相近的 <code>s_y</code>，它们之间的差异便不会进入预测误差，也不需要被恢复。</p>
-  </section>
-  <section class="jepa-outcome-card is-uncertain">
-    <span class="jepa-outcome-label">重要但未知</span>
-    <strong>保留多种可能</strong>
-    <p>如果一种差异需要保留，却无法由 context 确定，通用 JEPA 可以用不同的 <code>z</code> 表达多个可能的 target 表示。</p>
+  <section class="jepa-decision-card is-kept">
+    <span>如果需要保留，再问：能由 context 与条件确定吗？</span>
+    <div class="jepa-decision-options">
+      <div class="is-predictable">
+        <small>能够确定</small>
+        <strong>保留并预测</strong>
+        <p>这项差异进入 <code>s<sub>y</sub></code>，Predictor 必须学会相应关系。</p>
+      </div>
+      <div class="is-uncertain">
+        <small>无法唯一确定</small>
+        <strong>需要表达不确定性</strong>
+        <p>如果任务必须区分多个合理结果，单一确定性预测通常不够，还需要额外机制。</p>
+      </div>
+    </div>
   </section>
 </div>
 
-仍以车辆驶近岔路口为例：车辆的位置和速度可以由已有信息推断，属于第一种情况；路面纹理或树叶的具体摆动可以不进入目标表示，属于第二种情况；另一辆车最终左转还是右转无法事先确定，却可能直接影响行动，属于第三种情况。如果转向已经由智能体选定，它就是条件 $c$；如果它仍是未知因素，才需要由 $z$ 表达。
+仍以车辆驶近岔路口为例：路面纹理可以不进入目标表示；车辆的位置和速度需要保留，并可能由已有信息推出；另一辆车最终左转还是右转同样重要，却未必能够提前确定。
 
-[LeCun 2022 年的通用 JEPA](https://openreview.net/forum?id=BZ5a1r-kVsf) 正是通过两种机制处理“一份 context 对应多个 target”的情况：不需要区分的 target 可以通过编码器的不变性得到相同表示；仍需区分的可能结果，则可以通过改变 $z$ 得到不同的预测表示。这是一种通用设计，[I-JEPA](https://arxiv.org/abs/2301.08243) 和 [V-JEPA](https://arxiv.org/abs/2404.08471) 等具体实现并没有完整采用其中显式搜索多个结果的潜变量机制。
-
-训练时，Target Encoder 用真实的 $y$ 提供参照表示 $s_y$。训练完成后保留哪些模块，则取决于用途：表征学习通常使用编码器；预测未来状态还需要 Context Encoder 与 Predictor。无论哪种用途，JEPA 的 Predictor 都不会因此自动变成图像或视频生成器。
-
-::: warning 不可预测，不等于不重要
-JEPA 提供了忽略差异和表达不确定性的机制，却不会自动知道二者的正确边界。预测任务、数据和训练约束都会影响表示最终保留什么；如果所有输入都被编码成同一个常量，预测误差甚至也可以很小。怎样让表示既有信息又可预测，就是 5.2 要处理的**表示坍缩**问题。
+::: info 潜变量 $z$ 是通用蓝图中的扩展
+当一份 context 对应多个仍需区分的结果时，[LeCun 2022 年的通用 JEPA](https://openreview.net/forum?id=BZ5a1r-kVsf) 设想用潜变量 $z$ 参数化不同的兼容预测，以表达 context 中缺少的未知因素。这不是 JEPA 的必备模块；[I-JEPA](https://arxiv.org/abs/2301.08243) 和 [V-JEPA](https://arxiv.org/abs/2404.08471) 都没有显式使用 $z$ 来生成或搜索多个候选 target 表示。
 :::
 
-至此，JEPA 的计算过程可以概括为：**构造 context 与 target，分别编码，在表示空间中完成预测，再用目标表示提供训练信号。** 下一节将继续讨论，这套计算最终希望形成怎样的内部状态。
+::: warning 预测误差小，不等于表示有用
+JEPA 不会自动知道哪些差异应该保留。预测任务、数据和训练约束共同塑造 target 表示；如果所有输入都被编码成同一个常量，预测误差甚至也可以很小。怎样避免这种**表示坍缩**，将在 5.2 中展开。
+:::
 
-## 5.1.3　从预测表征到行动规划：JEPA 研究现状
+至此，JEPA 的基本计算关系已经清楚了：**构造 context 与 target，分别编码，用一侧表示预测另一侧表示，再用目标表示提供训练信号。** 后来的工作主要改变 context、target、预测条件以及预测结果的用途。下一节将沿着这些变化，梳理 JEPA 的发展过程。
 
-JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问题**：target 从静态图像中的区域扩展到视频中的时空状态，动作随后成为 Predictor 的条件，预测结果才开始被用于规划。
+## 5.1.3　JEPA 研究现状：一条主线与多条前沿
 
-### 时间线：从 JEPA 蓝图到行动规划
+JEPA 的基本计算关系没有改变，变化的是**预测问题本身**：target 从静态图像中的区域扩展到视频中的时空状态，动作又进一步成为 Predictor 的条件。
+
+下面先沿时间线观察这条能力主线怎样形成，再看当前研究正在分别补齐哪些瓶颈。前者回答“JEPA 怎样走到今天”，后者回答“它距离更完整的世界模型还缺什么”。
+
+### 主线：从蓝图到受限规划
 
 <div class="jepa-history" role="list" aria-label="JEPA 重要工作时间线">
   <article class="jepa-history-item" role="listitem">
@@ -174,10 +256,10 @@ JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问�
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>JEPA 被提出为世界模型的研究蓝图</strong>
+        <strong>提出核心设想：在抽象表示中预测世界</strong>
         <span class="jepa-history-tag is-blueprint">LeCun</span>
       </div>
-      <p><a href="https://openreview.net/forum?id=BZ5a1r-kVsf">A Path Towards Autonomous Machine Intelligence</a> 提出：世界模型应预测抽象表示，而不是还原观测中的全部细节；H-JEPA 则进一步设想在多个抽象层级和时间尺度上进行预测。</p>
+      <p><b>核心变化：</b><a href="https://openreview.net/forum?id=BZ5a1r-kVsf">A Path Towards Autonomous Machine Intelligence</a> 提出，世界模型应预测抽象表示，而不是还原观测中的全部细节；H-JEPA 则进一步设想在多个抽象层级和时间尺度上预测。</p>
       <p class="jepa-history-boundary"><b>边界：</b>这是一份研究蓝图，不是已经完成的系统。</p>
     </div>
   </article>
@@ -186,10 +268,10 @@ JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问�
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>先在静态图像上验证表示预测</strong>
+        <strong>在静态图像上验证表示预测</strong>
         <span class="jepa-history-tag is-representation">I-JEPA</span>
       </div>
-      <p><code>可见区域 → 被遮挡区域的表示</code>。<a href="https://arxiv.org/abs/2301.08243">I-JEPA</a> 给出了可扩展的图像实验，说明这种目标可以学到有用的静态视觉表征。</p>
+      <p><b>预测关系：</b><code>可见区域 → 被遮挡区域的表示</code>。<a href="https://arxiv.org/abs/2301.08243">I-JEPA</a> 给出了可扩展的图像实验，说明这种目标可以学到有用的静态视觉表征。</p>
       <p class="jepa-history-boundary"><b>边界：</b>它不包含时间和动作，也不描述环境如何变化。</p>
     </div>
   </article>
@@ -198,11 +280,11 @@ JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问�
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>从静态场景走向视频中的时间变化</strong>
+        <strong>从静态图像走向视频时空表征</strong>
         <span class="jepa-history-tag is-video">V-JEPA</span>
       </div>
-      <p><code>可见时空区域 → 被遮挡时空区域的表示</code>。<a href="https://arxiv.org/abs/2404.08471">V-JEPA</a> 将预测扩展到视频，让模型从无动作标签的视频中学习时间变化。</p>
-      <p class="jepa-history-boundary"><b>边界：</b>看到画面如何变化，不等于能够区分不同动作造成的后果。</p>
+      <p><b>预测关系：</b><code>可见时空区域 → 被遮挡时空区域的表示</code>。<a href="https://arxiv.org/abs/2404.08471">V-JEPA</a> 将遮挡表示预测扩展到视频，使模型从无动作标签的视频中学习兼顾外观与运动信息的时空表征。</p>
+      <p class="jepa-history-boundary"><b>边界：</b>它不是严格的“过去预测未来”，也不建模动作造成的因果状态转移。</p>
     </div>
   </article>
   <article class="jepa-history-item" role="listitem">
@@ -210,81 +292,103 @@ JEPA 的基本计算关系并没有改变。真正发生变化的是**预测问�
     <div class="jepa-history-dot" aria-hidden="true"></div>
     <div class="jepa-history-card">
       <div class="jepa-history-heading">
-        <strong>从大规模视频预训练走向动作与规划</strong>
-        <span class="jepa-history-tag is-action">V-JEPA 2 / 2-AC</span>
+        <strong>让动作进入预测，并开始服务规划</strong>
+        <span class="jepa-history-tag is-action">V-JEPA 2 → V-JEPA 2-AC</span>
       </div>
-      <p><a href="https://arxiv.org/abs/2506.09985">V-JEPA 2</a> 扩大了视频预训练的模型与数据规模；随后，V-JEPA 2-AC 冻结视频 Encoder，用机器人轨迹训练动作条件 Predictor，并将预测结果接入 MPC 选择动作。</p>
-      <p class="jepa-history-boundary"><b>边界：</b>基础 V-JEPA 2 不接收动作；动作预测来自后训练的 2-AC。现有规划仍依赖外部目标、代价和 Planner，主要证据来自受限任务与较短范围。</p>
-    </div>
-  </article>
-  <article class="jepa-history-item" role="listitem">
-    <div class="jepa-history-year">2025–26</div>
-    <div class="jepa-history-dot" aria-hidden="true"></div>
-    <div class="jepa-history-card">
-      <div class="jepa-history-heading">
-        <strong>主线走到行动规划，研究图景转向多线并行</strong>
-        <span class="jepa-history-tag is-frontier">多线并行</span>
-      </div>
-      <p>从 2025 年末的 <a href="https://arxiv.org/abs/2511.08544">LeJEPA</a>，到 2026 年的 <a href="https://arxiv.org/abs/2603.14482">V-JEPA 2.1</a>、<a href="https://arxiv.org/abs/2603.19312">LeWorldModel</a> 与 <a href="https://arxiv.org/abs/2604.03208">HWM</a>，不同工作开始分别处理训练稳定性、状态表征、端到端动力学和长程规划等瓶颈。</p>
-      <p class="jepa-history-boundary"><b>边界：</b>这些工作不是依次替代的“下一代 JEPA”，而是下面几条并行研究线的代表。</p>
+      <p><b>两步推进：</b><a href="https://arxiv.org/abs/2506.09985">V-JEPA 2</a> 先扩大视频预训练的模型与数据规模；随后，V-JEPA 2-AC 冻结视频 Encoder，用机器人轨迹训练动作条件 Predictor，并接入模型预测控制（MPC）。外部规划器（Planner，负责提出和选择候选动作）会比较动作的预测后果，再执行当前一步。</p>
+      <p class="jepa-history-boundary"><b>边界：</b>基础 V-JEPA 2 不接收动作。在论文的机器人部署中，规划视野为 1；pick-and-place 还使用了两张人工给定的中间目标图像。这说明的是闭环、目标条件下的受限控制，而不是自主分解长程任务。</p>
     </div>
   </article>
 </div>
 
-_时间线回答的是“JEPA 如何从表示学习走到受限规划”；到 2026 年，还需要横向观察不同工作正在补哪一个瓶颈。_
+::: tip 从一条主线到多个瓶颈
+这条时间线说明，JEPA 已经从静态表征学习推进到能够服务于受限规划的动作条件预测。但“能够接入 Planner”距离“形成通用世界模型”仍然很远：状态要稳定学出，要保留行动需要的信息；Predictor 要描述动作和不确定未来；Planner 还要把短期预测组织成长程行动。
 
-### 截至 2026：五条前沿路线并行推进
+下面五条路线是五个**问题维度**，不是五类互斥模型。同一项工作可能同时涉及其中多条。
+:::
 
-截至 2026 年，JEPA 的路线经过发展已经开始形成几条平行的研究线，包括：状态能否稳定学出？模型应该怎样组织？Predictor 能否描述动作造成的未来？表示是否适合行动？Planner 又怎样利用预测想得更远？
+### 前沿：五个瓶颈怎样相互衔接？
 
-此处只做概述，后续章节将会详细展开。
+截至 2026 年 8 月，相关研究大致可以放进三个相互连接的层次：先让模型学得出来，再让预测对行动有用，最后把预测真正用于行动。这是理解问题的层次，不是必须依次完成的流水线。
+
+<div class="jepa-frontier-map" role="list" aria-label="JEPA 前沿研究的三个层次">
+  <section role="listitem">
+    <span>训练层</span>
+    <strong>先学得出来</strong>
+    <p>防塌缩 · 训练架构</p>
+  </section>
+  <span class="jepa-frontier-map-arrow" aria-hidden="true">→</span>
+  <section role="listitem">
+    <span>模型层</span>
+    <strong>再预测得有用</strong>
+    <p>状态表示 · 动作动力学</p>
+  </section>
+  <span class="jepa-frontier-map-arrow" aria-hidden="true">→</span>
+  <section role="listitem">
+    <span>系统层</span>
+    <strong>最后用于行动</strong>
+    <p>Planner · 长程规划</p>
+  </section>
+</div>
 
 <div class="jepa-frontier-grid" role="list" aria-label="2026 年 JEPA 的五条并行研究线">
   <article class="jepa-frontier-card is-training" role="listitem">
     <span class="jepa-frontier-index">01</span>
     <strong>防塌缩：怎样学出有信息的状态？</strong>
-    <p>如果所有输入都被编码成同一个表示，预测误差也可能很小。I-JEPA 与 V-JEPA 采用缓慢更新的 Target Encoder、停止梯度和 Predictor 等非对称机制稳定训练；NeurIPS 2024 的<a href="https://proceedings.neurips.cc/paper_files/paper/2024/hash/04a80267ad46fc730011f8760f265054-Abstract-Conference.html">防塌缩 C-JEPA</a>和 <a href="https://arxiv.org/abs/2511.08544">LeJEPA</a> 则开始用显式正则直接约束表示的方差与分布。</p>
+    <p>如果所有输入都被编码成同一个常量，预测误差也可能很小。I-JEPA 与 V-JEPA 结合停止梯度、EMA 更新的 Target Encoder 和不对称的 context/target 预测结构来稳定训练；<a href="https://proceedings.neurips.cc/paper_files/paper/2024/hash/04a80267ad46fc730011f8760f265054-Abstract-Conference.html">Contrastive-JEPA（防塌缩 C-JEPA）</a> 和 <a href="https://arxiv.org/abs/2511.08544">LeJEPA</a> 则进一步用显式正则约束表示的方差或分布。</p>
     <p class="jepa-frontier-note"><b>仍未解决：</b>不塌缩只是最低条件。表示彼此不同，不等于它保留了正确的语义、动力学和动作信息。</p>
   </article>
   <article class="jepa-frontier-card is-architecture" role="listitem">
     <span class="jepa-frontier-index">02</span>
     <strong>架构：Encoder 与 Predictor 应该怎样训练？</strong>
     <p>V-JEPA 2-AC 冻结大规模视频 Encoder，只训练动作条件 Predictor；<a href="https://arxiv.org/abs/2603.19312">LeWorldModel</a> 则让 Encoder 与 Predictor 端到端一起学习。前者复用已经学到的视觉表征，后者允许内部状态与环境动力学共同适配。</p>
-    <p class="jepa-frontier-note"><b>仍未解决：</b>两条路线尚无统一胜者。通用视觉能力、任务适应性、训练稳定性、数据效率与计算成本仍需取舍。</p>
-  </article>
-  <article class="jepa-frontier-card is-dynamics" role="listitem">
-    <span class="jepa-frontier-index">03</span>
-    <strong>动力学：怎样预测动作造成的未来？</strong>
-    <p>视频只能告诉模型世界发生了变化，动作条件模型还要分辨变化由什么行为造成。一些工作利用少量交互轨迹学习状态转移，另一些工作尝试从无动作标签视频中<a href="https://arxiv.org/abs/2601.05230">发现潜在动作</a>。研究也从一步预测转向多步滚动；当同一状态对应多个合理未来时，在常见的均方误差目标下，确定性 Predictor 往往只能给出平均结果。</p>
-    <p class="jepa-frontier-note"><b>仍未解决：</b>动作数据稀缺，多步预测会累积误差；怎样稳定表达随机、分叉的未来，仍处在很早期的探索阶段。</p>
+    <p class="jepa-frontier-note"><b>仍未解决：</b>冻结路线可以直接复用大规模预训练表征，但表示空间未必为当前动力学任务设计；端到端路线允许预测目标反过来塑造表示，同时必须显式处理表示坍缩。两者在什么数据、任务和计算预算下更合适，目前缺少统一的直接比较。</p>
   </article>
   <article class="jepa-frontier-card is-interface" role="listitem">
-    <span class="jepa-frontier-index">04</span>
+    <span class="jepa-frontier-index">03</span>
     <strong>表示：怎样让内部状态真正适合行动？</strong>
-    <p>精细控制需要保留位置、边界等局部信息，<a href="https://arxiv.org/abs/2603.14482">V-JEPA 2.1</a> 因此加强了稠密预测与深层监督。但信息更丰富还不够：2026 年 TMLR 接收的一项<a href="https://openreview.net/forum?id=cHZn5Gdh8e">系统研究</a>表明，更好的多步预测并不会自动带来更高的规划成功率；<a href="https://arxiv.org/abs/2607.25337">Temporal-Distance JEPA</a> 等早期预印本开始进一步学习可达性或时间距离。</p>
-    <p class="jepa-frontier-note"><b>仍未解决：</b>状态有信息、预测得准确与适合规划是三层不同的要求。目前还没有一种表示空间结构或代价函数能够适用于所有任务。</p>
+    <p>精细控制需要保留空间位置、局部边界和时序一致性等信息，<a href="https://arxiv.org/abs/2603.14482">V-JEPA 2.1</a> 因此加强了稠密预测与深层监督。但一项 2026 年 TMLR 接收的<a href="https://openreview.net/forum?id=cHZn5Gdh8e">系统研究</a>也发现，在其评估的导航和操作设置中，较低的多步 rollout 误差并不稳定对应更高的规划成功率。</p>
+    <p class="jepa-frontier-note"><b>仍未解决：</b>不塌缩、有信息、预测准确和适合规划，是不同层次的要求，不能相互替代。表示是否合适，仍需通过具体下游任务检验。</p>
+  </article>
+  <article class="jepa-frontier-card is-dynamics" role="listitem">
+    <span class="jepa-frontier-index">04</span>
+    <strong>动力学：怎样预测动作造成的未来？</strong>
+    <p>视频只能告诉模型世界发生了变化，动作条件模型还要分辨变化由什么行为造成。一些工作用交互轨迹学习状态转移，另一些工作尝试从无动作标签视频中<a href="https://arxiv.org/abs/2601.05230">发现潜在动作</a>；也有工作开始训练和评估多步 rollout。</p>
+    <p class="jepa-frontier-note"><b>仍未解决：</b>动作数据稀缺，多步预测会累积误差；如何进一步表示同一状态对应的多个合理未来，仍是尚未解决的问题。</p>
   </article>
   <article class="jepa-frontier-card is-planning" role="listitem">
     <span class="jepa-frontier-index">05</span>
     <strong>Planner：怎样把短期预测变成长程行动？</strong>
-    <p>Predictor 只回答“执行这些动作可能发生什么”，Planner 才负责提出并选择动作。短期 MPC 通常直接搜索动作序列；<a href="https://arxiv.org/abs/2604.03208">HWM</a> 尝试先在较长时间尺度上寻找潜在子目标，再用短期模型寻找具体动作；<a href="https://arxiv.org/abs/2606.09311">FF-JEPA</a> 则初步探索由模型直接预测潜在子目标。</p>
-    <p class="jepa-frontier-note"><b>仍未解决：</b>HWM 仍使用给定的最终目标和外部搜索；FF-JEPA 尝试去掉推理时的显式目标图像，但目前只有 Push-T 上的初步结果。开放世界中的长期自主规划还没有实现。</p>
+    <p>Predictor 只回答“执行这些动作可能发生什么”，Planner 才负责提出并选择动作。短期 MPC 搜索具体动作序列；<a href="https://arxiv.org/abs/2604.03208">HWM</a> 尝试先寻找较长时间尺度的潜在子目标，<a href="https://arxiv.org/abs/2606.09311">FF-JEPA</a> 则初步探索由模型直接预测子目标。</p>
+    <p class="jepa-frontier-note"><b>仍未解决：</b>现有方法仍依赖给定目标、外部搜索或边界清晰的短任务。开放世界中的长期自主规划还没有实现。</p>
   </article>
 </div>
 
-::: info 更多任务与预测方式
-除上述五条路线外，还有一批工作在探索 JEPA 能用于什么任务，又可以怎样构造预测目标。例如，[VL-JEPA](https://arxiv.org/abs/2512.10942) 将这种方法扩展到视觉—语言任务，[对象级 C-JEPA](https://arxiv.org/abs/2602.11389) 在对象层级建模关系，[UniJEPA](https://arxiv.org/abs/2608.07409) 则尝试统一图像与视频表示；音频、点云等模态中也出现了类似探索。这些工作未必属于同一条发展主线，但都在扩展 JEPA 的问题边界：context 与 target 可以怎样定义，模型可以预测什么，以及这种预测能够支持哪些任务。
-:::
+### 横向探索：更多任务与预测方式
+
+前面的五个瓶颈讨论的是怎样补齐 JEPA 从状态学习到行动规划的能力链。与此同时，还有一批工作通过改变模态、任务或 target 的定义，探索这套预测原则还能做什么：
+
+- **改变预测层级：** [Causal-JEPA（对象级 C-JEPA）](https://arxiv.org/abs/2602.11389) 从局部区域进一步走向对象级状态及对象间相互作用。它与前文的 Contrastive-JEPA 只是缩写相同，并非同一项工作。
+- **改变模态与任务：** [VL-JEPA](https://arxiv.org/abs/2512.10942) 将它扩展到视觉—语言任务；[A-JEPA](https://arxiv.org/abs/2311.15830) 与 [Point-JEPA](https://arxiv.org/abs/2404.16432) 则分别探索音频和点云。
+- **统一不同数据形态：** [UniJEPA](https://arxiv.org/abs/2608.07409) 尝试在同一框架中建模图像与视频。
+
+这些工作扩展的是 JEPA 的问题边界：context 与 target 可以怎样定义，模型可以预测什么，以及这种预测能够支持哪些任务。它们不是行动规划之后的“下一代 JEPA”。
 
 _截至 2026 年 8 月，LeJEPA、LeWorldModel、V-JEPA 2.1、HWM、FF-JEPA 和 Temporal-Distance JEPA 等多项代表工作仍是预印本。它们展示的是正在形成的研究方向，而不是已经公认的最终架构。_
+
+## 本节小结
+
+JEPA 的核心不是某个固定模型，而是在表示空间建立预测关系：给定 context 及已知条件，预测 target 的内部表示，而不要求重建全部观测细节。
+
+沿着一条能力主线，研究从静态图像区域预测扩展到视频时空表征，再通过动作条件 Predictor 与外部 Planner 进入受限控制；与此同时，也有工作在改变模态、任务和 target 的定义。所有工作都需要检验表示是否对目标任务有用、预测关系是否可靠；只有面向行动的世界模型，还需要进一步证明这些预测能够改善闭环规划与控制。
 
 ## 主要参考资料
 
 - [LeCun, 2022, A Path Towards Autonomous Machine Intelligence](https://openreview.net/forum?id=BZ5a1r-kVsf)——JEPA、H-JEPA 与完整自主智能架构的原始蓝图。
 - [I-JEPA](https://arxiv.org/abs/2301.08243)、[IWM](https://arxiv.org/abs/2403.00504)、[V-JEPA](https://arxiv.org/abs/2404.08471)、[V-JEPA 2](https://arxiv.org/abs/2506.09985) 与 [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)——核对图像、条件预测、视频、动作条件预测和稠密局部表征的发展。
-- [NeurIPS 2024 防塌缩 C-JEPA](https://proceedings.neurips.cc/paper_files/paper/2024/hash/04a80267ad46fc730011f8760f265054-Abstract-Conference.html)、[LeJEPA](https://arxiv.org/abs/2511.08544)、[LeWorldModel](https://arxiv.org/abs/2603.19312) 与 [When Does LeJEPA Learn a World Model?](https://arxiv.org/abs/2605.26379)——核对显式防塌缩、端到端世界模型及其理论边界。
+- [NeurIPS 2024 Contrastive-JEPA（防塌缩 C-JEPA）](https://proceedings.neurips.cc/paper_files/paper/2024/hash/04a80267ad46fc730011f8760f265054-Abstract-Conference.html)、[LeJEPA](https://arxiv.org/abs/2511.08544)、[LeWorldModel](https://arxiv.org/abs/2603.19312) 与 [When Does LeJEPA Learn a World Model?](https://arxiv.org/abs/2605.26379)——核对显式防塌缩、端到端世界模型及其理论边界。
 - [Learning Latent Action World Models in the Wild](https://arxiv.org/abs/2601.05230)、[What Drives Success in Physical Planning with JEPA World Models?](https://openreview.net/forum?id=cHZn5Gdh8e)、[Temporal-Distance JEPA](https://arxiv.org/abs/2607.25337)、[HWM](https://arxiv.org/abs/2604.03208) 与 [FF-JEPA](https://arxiv.org/abs/2606.09311)——核对潜在动作、规划接口与长程规划的早期探索。
-- [对象级 C-JEPA](https://arxiv.org/abs/2602.11389)、[VL-JEPA](https://arxiv.org/abs/2512.10942) 与 [UniJEPA](https://arxiv.org/abs/2608.07409)——核对对象关系、视觉语言和统一建模等横向扩展。
+- [Causal-JEPA（对象级 C-JEPA）](https://arxiv.org/abs/2602.11389)、[VL-JEPA](https://arxiv.org/abs/2512.10942)、[A-JEPA](https://arxiv.org/abs/2311.15830)、[Point-JEPA](https://arxiv.org/abs/2404.16432) 与 [UniJEPA](https://arxiv.org/abs/2608.07409)——核对对象状态及相互作用、视觉语言、音频、点云和统一建模等横向扩展。
 - [Stanford CS25：Joint Embedding Predictive World Models](https://web.stanford.edu/class/cs25/)（[slides](https://drive.google.com/file/d/1bF5Yfzf-FG5iNIAgsXn2DwVD3l3ymvZW/view)）——采用“状态表征—世界变化—动作后果”的教学骨架。
 - [LeCun, Les Houches 2022, Lecture 3](https://leshouches2022.github.io/SLIDES/lecun-20220720-leshouches-03.pdf)——核对 JEPA、latent variable、H-JEPA 的原始概念关系。
 - [LeCun & Manyika, 2026, Learning Abstractions](https://www.amacad.org/publication/daedalus/learning-abstractions-conversation-yann-lecun)——核对“预测充分的抽象表示”与多层、长时间尺度预测的近期表述。
